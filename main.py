@@ -3,7 +3,7 @@ import os
 import scipy.misc
 import numpy as np
 
-from model import pix2pix
+from model import pix2pix, wgan_pix2pix
 import tensorflow as tf
 
 gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.45)
@@ -12,6 +12,7 @@ config = tf.ConfigProto(gpu_options=gpu_options)
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('--dataset_name', dest='dataset_name', default='facades', help='name of the dataset')
 parser.add_argument('--epoch', dest='epoch', type=int, default=200, help='# of epoch')
+parser.add_argument('--wgan', dest='wgan', type=bool, default=False, help='whether to use wgan')
 parser.add_argument('--batch_size', dest='batch_size', type=int, default=1, help='# images in batch')
 parser.add_argument('--train_size', dest='train_size', type=int, default=1e8, help='# images used to train')
 parser.add_argument('--load_size', dest='load_size', type=int, default=286, help='scale images to this size')
@@ -36,6 +37,7 @@ parser.add_argument('--checkpoint_dir', dest='checkpoint_dir', default='./checkp
 parser.add_argument('--sample_dir', dest='sample_dir', default='./sample', help='sample are saved here')
 parser.add_argument('--test_dir', dest='test_dir', default='./test', help='test sample are saved here')
 parser.add_argument('--L1_lambda', dest='L1_lambda', type=float, default=100.0, help='weight on L1 term in objective')
+parser.add_argument('--discriminator_steps', dest='discriminator_steps', type=int, default=10, help='number of steps in discrimator')
 
 args = parser.parse_args()
 
@@ -48,9 +50,17 @@ def main(_):
         os.makedirs(args.test_dir)
 
     with tf.Session(config=config) as sess:
-        model = pix2pix(sess, image_size=args.fine_size, batch_size=args.batch_size,
-                        output_size=args.fine_size, dataset_name=args.dataset_name,
-                        checkpoint_dir=args.checkpoint_dir, sample_dir=args.sample_dir, args=args)
+        if args.wgan:
+            print("using wgan ", "learning rate ", args.lr)
+            model = wgan_pix2pix(sess, discriminator_steps=args.discriminator_steps,
+                    clip_values=(-0.01, 0.01),
+                    image_size=args.fine_size, batch_size=args.batch_size,
+                    output_size=args.fine_size, dataset_name=args.dataset_name,
+                    checkpoint_dir=args.checkpoint_dir, sample_dir=args.sample_dir, args=args)
+        else:
+            model = pix2pix(sess, image_size=args.fine_size, batch_size=args.batch_size,
+                    output_size=args.fine_size, dataset_name=args.dataset_name,
+                    checkpoint_dir=args.checkpoint_dir, sample_dir=args.sample_dir, args=args)
 
         if args.phase == 'train':
             model.train(args)
