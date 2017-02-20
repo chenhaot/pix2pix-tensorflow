@@ -6,6 +6,9 @@ import numpy as np
 from model import pix2pix
 import tensorflow as tf
 
+gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.45)
+config = tf.ConfigProto(gpu_options=gpu_options)
+
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('--dataset_name', dest='dataset_name', default='facades', help='name of the dataset')
 parser.add_argument('--epoch', dest='epoch', type=int, default=200, help='# of epoch')
@@ -44,10 +47,10 @@ def main(_):
     if not os.path.exists(args.test_dir):
         os.makedirs(args.test_dir)
 
-    with tf.Session() as sess:
+    with tf.Session(config=config) as sess:
         model = pix2pix(sess, image_size=args.fine_size, batch_size=args.batch_size,
                         output_size=args.fine_size, dataset_name=args.dataset_name,
-                        checkpoint_dir=args.checkpoint_dir, sample_dir=args.sample_dir)
+                        checkpoint_dir=args.checkpoint_dir, sample_dir=args.sample_dir, args=args)
 
         if args.phase == 'train':
             model.train(args)
@@ -56,3 +59,4 @@ def main(_):
 
 if __name__ == '__main__':
     tf.app.run()
+

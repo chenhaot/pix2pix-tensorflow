@@ -42,6 +42,7 @@ def preprocess_A_and_B(img_A, img_B, load_size=286, fine_size=256, flip=True, is
         img_A = scipy.misc.imresize(img_A, [fine_size, fine_size])
         img_B = scipy.misc.imresize(img_B, [fine_size, fine_size])
     else:
+        # add random noise in training
         img_A = scipy.misc.imresize(img_A, [load_size, load_size])
         img_B = scipy.misc.imresize(img_B, [load_size, load_size])
 
@@ -70,6 +71,7 @@ def imread(path, is_grayscale = False):
     else:
         return scipy.misc.imread(path).astype(np.float)
 
+# useless function
 def merge_images(images, size):
     return inverse_transform(images)
 
@@ -86,6 +88,7 @@ def merge(images, size):
 def imsave(images, size, path):
     return scipy.misc.imsave(path, merge(images, size))
 
+# 127.5 = (0 + 255) / 2
 def transform(image, npx=64, is_crop=True, resize_w=64):
     # npx : # of pixels width/height of image
     if is_crop:
